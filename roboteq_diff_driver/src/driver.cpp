@@ -273,8 +273,15 @@ ROS_DEBUG_STREAM("cmdvel speed right: " << right_speed << " left: " << left_spee
   if (open_loop)
   {
     // motor power (scale 0-1000)
+    // set minimum to overcome friction if cmd_vel too low
     int32_t right_power = right_speed / wheel_circumference * 60.0 / max_rpm * 1000.0;
     int32_t left_power = left_speed / wheel_circumference * 60.0 / max_rpm * 1000.0;
+    if (right_power < 10 && left_power > 0){
+      right_power = 10
+    }
+    if (left_power < 10 && left_power > 0){
+      left_power = 10
+    }
 #ifdef _CMDVEL_DEBUG
 ROS_DEBUG_STREAM("cmdvel power right: " << right_power << " left: " << left_power);
 #endif
@@ -819,7 +826,7 @@ int MainNode::run()
 	while ( ros::ok() )
 	{
 		ROS_INFO_STREAM("Opening serial port on " << port << " at " << baud << "..." );
-		try
+		try`
 		{
 			controller.open();
 			if ( controller.isOpen() )
