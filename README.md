@@ -28,9 +28,11 @@ It also expects that when it issues positive speed/power commands to the motor c
 
 ## TODO
 
-- [x] Make topic names and frames configuration parameters configurable at runtime.
-- [x] Make robot configuration parameters configurable at runtime.
-- [x] Make motor controller device configuration parameters configurable at runtime.
+- [ ] Finish initial development of motor commands and odometry stream in ROS2
+- [ ] Test with HDC2460
+- [ ] Make topic names and frames configuration parameters configurable at runtime.
+- [ ] Make robot configuration parameters configurable at runtime.
+- [ ] Make motor controller device configuration parameters configurable at runtime.
 - [ ] Make miscellaneous motor controller configuration parameters configurable at runtime.
 - [ ] Implement dynamically enabled forced-run mode to verify correct motor power connections.
 - [ ] Implement dynamically enabled self-test mode to verify correct motor power and encoder connections and configuration.
