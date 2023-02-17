@@ -1,4 +1,6 @@
 # roboteq_diff_driver
+--------------------This branch is in development for ROS2-------------------------------
+* Currently working to just include functionality of subscribing to /cmd_vel, sending motor speed commands, and stream odometry information.
 
 ROS driver for the Roboteq SDC21xx family of motor controllers in a differential-drive configuration.
 
