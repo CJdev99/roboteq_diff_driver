@@ -40,6 +40,7 @@ It also expects that when it issues positive speed/power commands to the motor c
 ## Authors
 
 * **Chad Attermann** - *Initial work* - [Ecos Technologies](https://github.com/ecostech)
+* **Chase Devitt** - *ROS2 Migration*
 
 ## License
 
