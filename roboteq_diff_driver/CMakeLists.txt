@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(roboteq_diff_driver)
+project(isc_roboteq)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -8,7 +8,7 @@ endif()
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -17,10 +17,39 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(serial REQUIRED)
+find_package(serial_utils REQUIRED)
+find_package(Boost 1.71 CONFIG REQUIRED COMPONENTS thread)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+add_executable(roboteq_diff_driver src/driver.cpp)
+
+ament_target_dependencies(
+  roboteq_diff_driver serial
+  rclcpp
+  sensor_msgs
+  std_msgs
+  geometry_msgs
+)
+
+target_include_directories(roboteq_diff_driver PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+install(
+  DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(TARGETS roboteq_diff_driver
+  DESTINATION lib/${PROJECT_NAME})
+  
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
