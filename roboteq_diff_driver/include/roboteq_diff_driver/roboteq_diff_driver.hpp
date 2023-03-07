@@ -14,6 +14,8 @@
 #include "std_msgs/msg/header.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 namespace Roboteq
 {
 class Roboteq : public rclcpp::Node
@@ -33,7 +35,7 @@ class Roboteq : public rclcpp::Node
   
 
   // buffer for reading encoder counts
-  int odom_idx{};
+  unsigned int odom_idx{};
   char odom_buf[24]{};
 
   // toss out initial encoder readings
@@ -67,8 +69,9 @@ class Roboteq : public rclcpp::Node
   int encoder_cpr{};
   double max_amps{};
   int max_rpm{};
-  nav_msgs::msg::Odometry odom_msg;
-  geometry_msgs::msg::Twist twist_msg;
+  //nav_msgs::msg::Odometry odom_msg{};
+  nav_msgs::msg::Odometry::UniquePtr odom_msg{};
+  //geometry_msgs::msg::Twist twist_msg{};
 
 
 
@@ -90,9 +93,10 @@ class Roboteq : public rclcpp::Node
   //void odom_hs_run();
   void odom_ms_run();
   void odom_ls_run();
-  void odom_publish(const nav_msgs::msg::Odometry::SharedPtr odom_msg);
+  void odom_publish();
 
   void update_parameters();
+  int run();
 
   //subscriber
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmdvel_sub;

@@ -21,13 +21,18 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(serial REQUIRED)
 find_package(Boost 1.71 CONFIG REQUIRED COMPONENTS thread)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(roboteq_diff_driver src/driver.cpp)
+#add_executable(roboteq_diff_driver src/driver.cpp)
+add_executable(roboteq_diff_driver src/driver_dev.cpp)
 
 ament_target_dependencies(
   roboteq_diff_driver serial
@@ -35,6 +40,10 @@ ament_target_dependencies(
   sensor_msgs
   std_msgs
   geometry_msgs
+  nav_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 target_include_directories(roboteq_diff_driver PUBLIC
