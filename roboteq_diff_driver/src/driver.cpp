@@ -35,16 +35,8 @@
 //  If configured correctly robot should translate forward in a straight line
 //#define _CMDVEL_FORCE_RUN
 
-#include <geometry_msgs/msg/Twist.h>
-#include <nav_msgs/msg/Odometry.h>
-#include <tf2_ros/transform_broadcaster.h>
-
-#include <tf2_ros/LinearMath/Quaternion.h>
-
-
-
-
-
+//#include <geometry_msgs/msg/Twist.hpp> //maybe?
+//#include <nav_msgs/msg/Odometry.hpp> //Don't use these in ros2
 //
 // odom publisher
 //
@@ -61,11 +53,12 @@
 
 #define NORMALIZE(_z) atan2(sin(_z), cos(_z))
 
-#include <tf2_ros/tf2_ros.h> //check
-#include <geometry_msgs/msg/Quaternion.h>
+//#include <tf2_ros/tf2_ros.h> //check
+//#include <geometry_msgs/msg/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/msg/TransformStamped.h>
-#include <nav_msgs/msg/Odometry.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+//#include <nav_msgs/msg/Odometry.h>
 #ifdef _ODOM_SENSORS
 #include <std_msgs/msg/Float32.h>
 //#include <roboteq_diff_msgs/Duplex.h> // add custom msgs after
@@ -77,7 +70,8 @@
 
 void mySigintHandler(int sig)
 {
-  ROS_INFO("Received SIGINT signal, shutting down...");
+  RCLCPP_INFO(get_logger(),"Received SIGINT signal, shutting down...");
+  //ROS_INFO("Received SIGINT signal, shutting down...");
   rclcpp::shutdown();
 }
 
@@ -85,7 +79,8 @@ void mySigintHandler(int sig)
 uint32_t millis()
 {
 	//ros::WallTime walltime = ros::WallTime::now(); // ROS1
-    rclcpp::TimePoint now = rclcpp::Clock::now();
+    //rclcpp::TimePoint now = rclcpp::Clock::now(); //original
+    rclcpp::Time now = this->get_clock()->now();
 //	return (uint32_t)((walltime._sec*1000 + walltime.nsec/1000000.0) + 0.5);
 //	return (uint32_t)(walltime.toNSec()/1000000.0+0.5);
 	//return (uint32_t)(now.toNSec()/1000000); //ROS1
@@ -103,7 +98,7 @@ public:
   //
   // cmd_vel subscriber
   //
-  void cmdvel_callback( const geometry_msgs_msgs::Twist::SharedPtr twist_msg);
+  void cmdvel_callback( const geometry_msgs::Twist::SharedPtr twist_msg);
   void cmdvel_setup();
   void cmdvel_loop();
   void cmdvel_run();
@@ -142,15 +137,15 @@ protected:
   //
   // odom publisher
   //
-  rclcpp::Subscription<geometry_msgs_msgs::Twist>::SharedPtr cmdvel_sub;
+  rclcpp::Subscription<geometry_msgs::Twist>::SharedPtr cmdvel_sub;
 
   //
   // odom publisher
   //
-  geometry_msgs_msgs::TransformStamped tf_msg;
+  geometry_msgs::TransformStamped tf_msg;
   tf2_ros::TransformBroadcaster odom_broadcaster;
-  nav_msgs_msgs::Odometry odom_msg;
-  rclcpp::Publisher<nav_msgs_msgs::Odometry>::SharedPtr odom_pub;
+  nav_msgs::Odometry odom_msg;
+  rclcpp::Publisher<nav_msgs::Odometry>::SharedPtr odom_pub;
 /* ROS1
 #ifdef _ODOM_SENSORS
   std_msgs::Float32 voltage_msg;
@@ -166,14 +161,14 @@ protected:
 /*
 //ROS2: TODO: Add sensor msgs later
 #ifdef _ODOM_SENSORS
-//std_msgs_msgs::Float32 voltage_msg;
-//rclcpp::Publisher<std_msgs_msgs::Float32>::SharedPtr voltage_pub;
-//roboteq_diff_msgs_msgs::Duplex current_msg;
-//rclcpp::Publisher<roboteq_diff_msgs_msgs::Duplex>::SharedPtr current_pub;
-//std_msgs_msgs::Float32 energy_msg;
-//rclcpp::Publisher<std_msgs_msgs::Float32>::SharedPtr energy_pub;
-//std_msgs_msgs::Float32 temperature_msg;
-//rclcpp::Publisher<std_msgs_msgs::Float32>::SharedPtr temperature_pub;
+//std_msgs::Float32 voltage_msg;
+//rclcpp::Publisher<std_msgs::Float32>::SharedPtr voltage_pub;
+//roboteq_diff_msgs::Duplex current_msg;
+//rclcpp::Publisher<roboteq_diff_msgs::Duplex>::SharedPtr current_pub;
+//std_msgs::Float32 energy_msg;
+//rclcpp::Publisher<std_msgs::Float32>::SharedPtr energy_pub;
+//std_msgs::Float32 temperature_msg;
+//rclcpp::Publisher<std_msgs::Float32>::SharedPtr temperature_pub;
 #endif
 */
   // buffer for reading encoder counts
@@ -355,7 +350,7 @@ MainNode::MainNode() :
 // cmd_vel subscriber
 //
 
-void MainNode::cmdvel_callback( const geometry_msgs_msgs::Twist::SharedPtr twist_msg) //const???
+void MainNode::cmdvel_callback( const geometry_msgs::Twist::SharedPtr twist_msg) //const???
 {
     // wheel speed (m/s)
   float right_speed = twist_msg.linear.x + track_width * twist_msg.angular.z / 2.0;
@@ -370,15 +365,18 @@ ROS_DEBUG_STREAM("cmdvel speed right: " << right_speed << " left: " << left_spee
   if (open_loop)
   {
     // motor power (scale 0-1000)
-    // set minimum to overcome friction if cmd_vel too low
+    
     int32_t right_power = right_speed / wheel_circumference * 60.0 / max_rpm * 1000.0;
     int32_t left_power = left_speed / wheel_circumference * 60.0 / max_rpm * 1000.0;
+    /*
+    // set minimum to overcome friction if cmd_vel too low
     if (right_power < 10 && left_power > 0){
       right_power = 10
     }
     if (left_power < 10 && left_power > 0){
       left_power = 10
     }
+    */
 
 #ifdef _CMDVEL_DEBUG
 RCLCPP_DEBUG_STREAM(get_logger(), "cmdvel speed right: " << right_speed << " left: " << left_speed);
@@ -488,7 +486,7 @@ void MainNode::cmdvel_setup()
 
   // cmdvel_sub = nh.subscribe(cmdvel_topic, 1000, &MainNode::cmdvel_callback, this); //original
   // ths-> before create ???
-  cmdvel_sub = this->create_subscription<geometry_msgs_msgs::Twist>(
+  cmdvel_sub = this->create_subscription<geometry_msgs::Twist>(
       cmdvel_topic,  // topic name
       1000,       // QoS history depth
       std::bind(&MainNode::cmdvel_callback, this, std::placeholders::_1)); // check - might just need _1
@@ -552,13 +550,13 @@ void MainNode::odom_setup()
   
   if ( pub_odom_tf )
   {
-    RCLCPP_INFO(node->get_logger(), "Broadcasting odom tf"); // might use this-> instead of node
+    RCLCPP_INFO(get_logger(), "Broadcasting odom tf"); // might use this-> instead of node
 //    odom_broadcaster.init(nh);	// ???
   }
 
   //ROS_INFO_STREAM("Publishing to topic " << odom_topic);
   //maybe use this-> instead of
-  RCLCPP_INFO_STREAM(node->get_logger(), "Publishing to topic " << odom_topic);
+  RCLCPP_INFO_STREAM(get_logger(), "Publishing to topic " << odom_topic);
 
   //odom_pub = nh.advertise<nav_msgs::Odometry>(odom_topic, 1000);
   odom_pub = this->create_publisher<nav_msgs::msg::Odometry>(odom_topic, 1000)
@@ -794,7 +792,7 @@ void MainNode::odom_publish()
 int MainNode::run()
 {
 
-	RCLCPP_INFO(node->get_logger,"Beginning setup...");
+	RCLCPP_INFO(rclcpp::get_logger(),"Beginning setup...");
 
 
 	serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
@@ -805,21 +803,21 @@ int MainNode::run()
 	// TODO: support automatic re-opening of port after disconnection
 	while ( rclcpp::ok() )
 	{
-		RCLCPP_INFO_STREAM(node->get_logger(),"Opening serial port on " << port << " at " << baud << "..." );
+		RCLCPP_INFO_STREAM(rclcpp::get_logger(),"Opening serial port on " << port << " at " << baud << "..." );
 		try
 		{
 			controller.open();
 			if ( controller.isOpen() )
 			{
-				RCLCPP_INFO(node->get_logger(),"Successfully opened serial port");
+				RCLCPP_INFO(this->get_logger(),"Successfully opened serial port");
 				break;
 			}
 		}
 		catch (serial::IOException e)
 		{
-			RCLCPP_WARN_STREAM(node->get_logger(),"serial::IOException: " << e.what());
+			RCLCPP_WARN_STREAM(rclcpp::get_logger(),"serial::IOException: " << e.what());
 		}
-		RCLCPP_WARN(node->get_logger(),"Failed to open serial port");
+		RCLCPP_WARN(rclcpp::get_logger(),"Failed to open serial port");
 		sleep( 5 );
 	}
 
@@ -833,7 +831,7 @@ int MainNode::run()
 
 //  ros::Rate loop_rate(10);
 
-  RCLCPP_INFO(node->get_logger(),"Beginning looping...");
+  RCLCPP_INFO(rclcpp::get_logger(),"Beginning looping...");
 	
   while (rclcpp::ok())
   {
@@ -879,7 +877,7 @@ int MainNode::run()
   if ( controller.isOpen() )
     controller.close();
 
-  RCLCPP_INFO(node->get_logger(),"Exiting");
+  RCLCPP_INFO(this->get_logger(),"Exiting");
 	
   return 0;
 }

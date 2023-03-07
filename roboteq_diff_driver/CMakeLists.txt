@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(isc_roboteq)
+project(roboteq_diff_driver)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -22,7 +22,6 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(serial REQUIRED)
-find_package(serial_utils REQUIRED)
 find_package(Boost 1.71 CONFIG REQUIRED COMPONENTS thread)
 # uncomment the following section in order to fill in
 # further dependencies manually.
