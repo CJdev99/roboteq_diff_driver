@@ -12,11 +12,16 @@ Does not require any MicroBasic script to operate.
 
 ## Usage
 
-Clone to src directory of catkin workspace, then `catkin_make`.
+Clone to src directory of catkin workspace, then 'colcon build'
 
-Requires ROS serial package. If not already installed:
+Requires serial package. If not already installed:
 ```
-sudo apt-get install ros-<dist>-serial
+run git clone -b ros2 https://github.com/wjwwood/serial.git
+navigate to serial directory
+
+make
+
+make install
 ```
 Sample launch files in roboteq_diff_driver/launch.
 
@@ -40,7 +45,7 @@ It also expects that when it issues positive speed/power commands to the motor c
 ## Authors
 
 * **Chad Attermann** - *Initial work* - [Ecos Technologies](https://github.com/ecostech)
-* **Chase Devitt** - *ROS2 Migration*
+* **Chase Devitt** - *initial ROS2 Migration*
 
 ## License
 
