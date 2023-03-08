@@ -16,17 +16,19 @@ Clone to src directory of catkin workspace, then 'colcon build'
 
 Requires serial package. If not already installed:
 
-run 
-'git clone -b ros2 https://github.com/wjwwood/serial.git'
-navigate to serial directory
+Get the code:
+    
+    git clone https://github.com/wjwwood/serial.git
+
 Build:
 
-'make'
+    make
 
-install:
+Install:
 
-'make install'
-
+    make install
+    
+    
 Sample launch files in roboteq_diff_driver/launch.
 
 ## Motor Power Connections
