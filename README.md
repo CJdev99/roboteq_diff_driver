@@ -12,12 +12,23 @@ Does not require any MicroBasic script to operate.
 
 ## Usage
 
-Clone to src directory of catkin workspace, then `catkin_make`.
+Clone to src directory of catkin workspace, then 'colcon build'
 
-Requires ROS serial package. If not already installed:
-```
-sudo apt-get install ros-<dist>-serial
-```
+Requires serial package. If not already installed:
+
+Get the code:
+    
+    git clone https://github.com/wjwwood/serial.git
+
+Build:
+
+    make
+
+Install:
+
+    make install
+    
+    
 Sample launch files in roboteq_diff_driver/launch.
 
 ## Motor Power Connections
@@ -28,7 +39,7 @@ It also expects that when it issues positive speed/power commands to the motor c
 
 ## TODO
 
-- [ ] Finish initial development of motor commands and odometry stream in ROS2
+- [X] Finish initial development of motor commands and odometry stream in ROS2
 - [ ] Test with HDC2460
 - [ ] Make topic names and frames configuration parameters configurable at runtime.
 - [ ] Make robot configuration parameters configurable at runtime.
@@ -40,7 +51,7 @@ It also expects that when it issues positive speed/power commands to the motor c
 ## Authors
 
 * **Chad Attermann** - *Initial work* - [Ecos Technologies](https://github.com/ecostech)
-* **Chase Devitt** - *ROS2 Migration*
+* **Chase Devitt** - *initial ROS2 Migration*
 
 ## License
 
