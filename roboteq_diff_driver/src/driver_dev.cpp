@@ -73,7 +73,7 @@ uint32_t millis()
 
 namespace Roboteq
 {
-Roboteq::Roboteq(rclcpp::NodeOptions options) : Node("roboteq_diff_driver", options)
+Roboteq::Roboteq() : Node("roboteq_diff_driver")
 // initialize parameters and variables
 {
     pub_odom_tf = this->declare_parameter("pub_odom_tf", false);
@@ -111,10 +111,37 @@ Roboteq::Roboteq(rclcpp::NodeOptions options) : Node("roboteq_diff_driver", opti
         cmdvel_topic, // topic name
         1000,         // QoS history depth
         std::bind(&Roboteq::cmdvel_callback, this, std::placeholders::_1));
+    /*
+    serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
+    controller.setPort(port);
+    controller.setBaudrate(baud);
+    controller.setTimeout(timeout);
+
+     // TODO: test this in constructor
+    RCLCPP_INFO_STREAM(this->get_logger(),"Opening serial port on " << port << " at " << baud << "..." );
+    try
+    {
+        controller.open();
+        if (controller.isOpen())
+        {
+            RCLCPP_INFO(this->get_logger(), "Successfully opened serial port");
+            break;
+        }
+    }
+    catch (serial::IOException &e)
+    {
+        RCLCPP_WARN_STREAM(this->get_logger(), "serial::IOException: ");
+        throw;
+    }
+    RCLCPP_WARN(this->get_logger(),"Failed to open serial port");
+    sleep(5);
+    */
+    run();
 }
 
 void Roboteq::update_parameters()
 {
+    RCLCPP_INFO(this->get_logger(), "Parameters updated ...");
     this->get_parameter("pub_odom_tf", pub_odom_tf);
     this->get_parameter("odom_frame", odom_frame);
     this->get_parameter("base_frame", base_frame);
@@ -171,6 +198,7 @@ void Roboteq::cmdvel_callback(const geometry_msgs::msg::Twist::SharedPtr twist_m
 }
 void Roboteq::cmdvel_setup()
 {
+    RCLCPP_INFO(this->get_logger(), "configuring motor controller...");
 
     // stop motors
     controller.write("!G 1 0\r");
@@ -275,7 +303,7 @@ void Roboteq::cmdvel_run()
 
 void Roboteq::odom_setup()
 {
-
+    RCLCPP_INFO(this->get_logger(),"setting up odom...");
     if (pub_odom_tf)
     {
         // RCLCPP_INFO(this->get_logger(), "Broadcasting odom tf"); // might use this-> instead of node
@@ -490,7 +518,8 @@ void Roboteq::odom_publish()
 // main function of node
 int Roboteq::run()
 {
-
+    
+    // TODO: test this in contructor
     // RCLCPP_INFO(rclcpp::get_logger(),"Beginning setup...");
 
     serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
@@ -501,7 +530,7 @@ int Roboteq::run()
     // TODO: support automatic re-opening of port after disconnection
     while (rclcpp::ok())
     {
-        // RCLCPP_INFO_STREAM(this->get_logger(),"Opening serial port on " << port << " at " << baud << "..." );
+        RCLCPP_INFO_STREAM(this->get_logger(),"Opening serial port on " << port << " at " << baud << "..." );
         try
         {
             controller.open();
@@ -519,7 +548,7 @@ int Roboteq::run()
         RCLCPP_WARN(this->get_logger(),"Failed to open serial port");
         sleep(5);
     }
-
+    
     cmdvel_setup();
     odom_setup();
 
@@ -530,7 +559,7 @@ int Roboteq::run()
 
     //  ros::Rate loop_rate(10);
 
-    // RCLCPP_INFO(rclcpp::get_logger(),"Beginning looping...");
+    RCLCPP_INFO(this->get_logger(),"Beginning looping...");
 
     while (rclcpp::ok())
     {
@@ -571,6 +600,10 @@ int Roboteq::run()
         // rclcpp::spin_some(this) // maybe put this for node??
         // rclcpp::spin(std::make_shared<MainNode>());
         //    loop_rate.sleep();
+        //rclcpp::NodeOptions options;
+        //rclcpp::spin(std::make_shared<Roboteq::Roboteq>(options));
+        
+        
     }
 
     if (controller.isOpen())
@@ -580,15 +613,25 @@ int Roboteq::run()
 
     return 0;
 }
+
+Roboteq::~Roboteq()
+{
+
+    if (controller.isOpen())
+        controller.close();
+
+}
+
 } // end of namespace
 
 int main(int argc, char* argv[])
 {
 
     rclcpp::init(argc, argv);
+    
     rclcpp::executors::SingleThreadedExecutor exec;
     rclcpp::NodeOptions options;
-    auto node = std::make_shared<Roboteq::Roboteq>(options);
+    auto node = std::make_shared<Roboteq::Roboteq>();
     exec.add_node(node);
     exec.spin();
     printf("stop");
@@ -606,16 +649,19 @@ int main(int argc, char* argv[])
 
     // return node.run();
 }
+
 /*
 int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::executors::SingleThreadedExecutor exec;
-  rclcpp::NodeOptions options;
-  auto lp_node = std::make_shared<Roboteq::Roboteq>(options);
-  exec.add_node(lp_node);
-  exec.spin();
-  rclcpp::shutdown();
-  return 0;
+  //rclcpp::executors::SingleThreadedExecutor exec;
+  //rclcpp::NodeOptions options;
+  Roboteq node;
+  //auto node = std::make_shared<Roboteq::Roboteq>(options);
+  //exec.add_node(node);
+  //exec.spin();
+      
+  signal(SIGINT, mySigintHandler);
+  return node.run();
 }
 */

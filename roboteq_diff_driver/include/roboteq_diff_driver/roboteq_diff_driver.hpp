@@ -21,12 +21,12 @@ namespace Roboteq
 class Roboteq : public rclcpp::Node
 {
   public:
-  explicit Roboteq(rclcpp::NodeOptions options);
-  //~Roboteq();
+  explicit Roboteq(); //(nodeOptions options?)
+  ~Roboteq();
 
   private:
   // class atributes
-  rclcpp::Node::SharedPtr nh{};
+  //rclcpp::Node::SharedPtr nh{};
 
   uint32_t starttime{};
   uint32_t hstimer{};
@@ -82,6 +82,7 @@ class Roboteq : public rclcpp::Node
   void cmdvel_setup();
   void cmdvel_loop();
   void cmdvel_run();
+ 
 
 
   //
