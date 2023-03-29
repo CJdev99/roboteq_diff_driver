@@ -1,7 +1,5 @@
 #include "roboteq_diff_driver/roboteq_diff_driver.hpp"
 
-// Include important C++ header files that provide class
-// templates for useful operations.
 #include <chrono>     // Date and time
 #include <functional> // Arithmetic, comparisons, and logical operations
 #include <memory>     // Dynamic memory management
@@ -60,7 +58,7 @@ serial::Serial controller;
 void mySigintHandler(int sig)
 {
     //RCLCPP_INFO(rclcpp::get_logger(),"Received SIGINT signal, shutting down..."); //todo
-    // ROS_INFO("Received SIGINT signal, shutting down...");
+
     rclcpp::shutdown();
 }
 */
@@ -105,36 +103,20 @@ Roboteq::Roboteq() : Node("roboteq_diff_driver")
     odom_last_y = 0.0;
     odom_last_yaw = 0.0;
     odom_last_time = 0;
+    
+    //odom_msg = std::make_shared<nav_msgs::msg::Odometry>();
+    odom_msg = nav_msgs::msg::Odometry();
 
+    //
     odom_pub = this->create_publisher<nav_msgs::msg::Odometry>(odom_topic, 1000);
     cmdvel_sub = this->create_subscription<geometry_msgs::msg::Twist>(
         cmdvel_topic, // topic name
         1000,         // QoS history depth
         std::bind(&Roboteq::cmdvel_callback, this, std::placeholders::_1));
-    /*
-    serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
-    controller.setPort(port);
-    controller.setBaudrate(baud);
-    controller.setTimeout(timeout);
-
-     // TODO: test this in constructor
-    RCLCPP_INFO_STREAM(this->get_logger(),"Opening serial port on " << port << " at " << baud << "..." );
-    try
-    {
-        controller.open();
-        if (controller.isOpen())
-        {
-            RCLCPP_INFO(this->get_logger(), "Successfully opened serial port");
-            break;
-        }
-    }
-    catch (serial::IOException &e)
-    {
-        RCLCPP_WARN_STREAM(this->get_logger(), "serial::IOException: ");
-        throw;
-    }
-    RCLCPP_WARN(this->get_logger(),"Failed to open serial port");
-    sleep(5);
+    /*    
+    using namespace std::chrono_literals;
+    param_update_timer =
+      this->create_wall_timer(1000ms, std::bind(&Roboteq::update_params, this));
     */
     run();
 }
@@ -306,16 +288,13 @@ void Roboteq::odom_setup()
     RCLCPP_INFO(this->get_logger(),"setting up odom...");
     if (pub_odom_tf)
     {
-        // RCLCPP_INFO(this->get_logger(), "Broadcasting odom tf"); // might use this-> instead of node
+        // RCLCPP_INFO(this->get_logger(), "Broadcasting odom tf"); // TODO
         //    odom_broadcaster.init(nh);	// ???
+        
     }
 
-    // ROS_INFO_STREAM("Publishing to topic " << odom_topic);
-    // maybe use this-> instead of
-    // RCLCPP_INFO_STREAM(get_logger(), "Publishing to topic " << odom_topic);
 
-    // odom_pub = nh.advertise<nav_msgs::Odometry>(odom_topic, 1000);
-    // odom_pub = this->create_publisher<nav_msgs::msg::Odometry>(odom_topic, 1000)
+
 
     // Set up the header
     /*
@@ -323,37 +302,38 @@ void Roboteq::odom_setup()
     tf_msg.header.frame_id = odom_frame;
     tf_msg.child_frame_id = base_frame;
     */
-
-    odom_msg->header.stamp = this->get_clock()->now();
-    odom_msg->header.frame_id = odom_frame;
-    odom_msg->child_frame_id = base_frame;
+    // broken here, test odom_msg memory
+    //auto odom_msg = nav_msgs::msg::Odometry();
+    odom_msg.header.stamp = this->get_clock()->now();
+    RCLCPP_INFO_STREAM(this->get_logger(),"test");
+    odom_msg.header.frame_id = odom_frame;
+    odom_msg.child_frame_id = base_frame;
 
     // Set up the pose covariance
     for (size_t i = 0; i < 36; i++)
     {
-        odom_msg->pose.covariance[i] = 0;
-        odom_msg->twist.covariance[i] = 0;
+        odom_msg.pose.covariance[i] = 0;
+        odom_msg.twist.covariance[i] = 0;
     }
 
-    odom_msg->pose.covariance[7] = 0.001;
-    odom_msg->pose.covariance[14] = 1000000;
-    odom_msg->pose.covariance[21] = 1000000;
-    odom_msg->pose.covariance[28] = 1000000;
-    odom_msg->pose.covariance[35] = 1000;
+    odom_msg.pose.covariance[7] = 0.001;
+    odom_msg.pose.covariance[14] = 1000000;
+    odom_msg.pose.covariance[21] = 1000000;
+    odom_msg.pose.covariance[28] = 1000000;
+    odom_msg.pose.covariance[35] = 1000;
 
     // Set up the twist covariance
-    odom_msg->twist.covariance[0] = 0.001;
-    odom_msg->twist.covariance[7] = 0.001;
-    odom_msg->twist.covariance[14] = 1000000;
-    odom_msg->twist.covariance[21] = 1000000;
-    odom_msg->twist.covariance[28] = 1000000;
-    odom_msg->twist.covariance[35] = 1000;
+    odom_msg.twist.covariance[0] = 0.001;
+    odom_msg.twist.covariance[7] = 0.001;
+    odom_msg.twist.covariance[14] = 1000000;
+    odom_msg.twist.covariance[21] = 1000000;
+    odom_msg.twist.covariance[28] = 1000000;
+    odom_msg.twist.covariance[35] = 1000;
 
     // Set up the transform message: move to odom_publish
     /*
     tf2::Quaternion q;
     q.setRPY(0, 0, odom_yaw);
-
     tf_msg.transform.translation.x = x;
     tf_msg.transform.translation.y = y;
     tf_msg.transform.translation.z = 0.0;
@@ -364,8 +344,10 @@ void Roboteq::odom_setup()
     */
 
     // start encoder streaming
+    RCLCPP_INFO_STREAM(this->get_logger(),"covariance set");
+    RCLCPP_INFO_STREAM(this->get_logger(),"odometry stream starting...");
     odom_stream();
-
+    
     odom_last_time = millis();
 #ifdef _ODOM_SENSORS
     current_last_time = millis();
@@ -472,7 +454,7 @@ void Roboteq::odom_publish()
     odom_last_x = odom_x;
     odom_last_y = odom_y;
     odom_last_yaw = odom_yaw;
-    // convert yaw to quat; maybe wrongs
+    // convert yaw to quat; 
     tf2::Quaternion tf2_quat;
     tf2_quat.setRPY(0, 0, odom_yaw);
     // Convert tf2::Quaternion to geometry_msgs::msg::Quaternion
@@ -490,7 +472,6 @@ void Roboteq::odom_publish()
         tf_msg.header.stamp = rclcpp::Clock::now();
         tf_msg.header.frame_id = odom_frame;
         tf_msg.child_frame_id = base_frame;
-
         tf_msg.transform.translation.x = odom_x;
         tf_msg.transform.translation.y = odom_y;
         tf_msg.transform.translation.z = 0.0;
@@ -501,27 +482,27 @@ void Roboteq::odom_publish()
     //fill odom msg
 
     //odom_msg->header.seq++; //? not used in ros2 ?
-    odom_msg->header.stamp = this->get_clock()->now();
-    odom_msg->pose.pose.position.x = odom_x;
-    odom_msg->pose.pose.position.y = odom_y;
-    odom_msg->pose.pose.position.z = 0.0;
-    odom_msg->pose.pose.orientation = quat;
-    odom_msg->twist.twist.linear.x = vx;
-    odom_msg->twist.twist.linear.y = vy;
-    odom_msg->twist.twist.linear.z = 0.0;
-    odom_msg->twist.twist.angular.x = 0.0;
-    odom_msg->twist.twist.angular.y = 0.0;
-    odom_msg->twist.twist.angular.z = vyaw;
-    odom_pub->publish(std::move(odom_msg));
-    // odom_pub.publish(odom_msg); ROS1
+    odom_msg.header.stamp = this->get_clock()->now();
+    odom_msg.pose.pose.position.x = odom_x;
+    odom_msg.pose.pose.position.y = odom_y;
+    odom_msg.pose.pose.position.z = 0.0;
+    odom_msg.pose.pose.orientation = quat;
+    odom_msg.twist.twist.linear.x = vx;
+    odom_msg.twist.twist.linear.y = vy;
+    odom_msg.twist.twist.linear.z = 0.0;
+    odom_msg.twist.twist.angular.x = 0.0;
+    odom_msg.twist.twist.angular.y = 0.0;
+    odom_msg.twist.twist.angular.z = vyaw;
+    odom_pub->publish(odom_msg);
+    
 }
 // main function of node
 int Roboteq::run()
 {
     
-    // TODO: test this in contructor
-    // RCLCPP_INFO(rclcpp::get_logger(),"Beginning setup...");
 
+    RCLCPP_INFO(rclcpp::get_logger(),"Beginning setup...");
+    //serial::Serial controller;
     serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
     controller.setPort(port);
     controller.setBaudrate(baud);
@@ -557,7 +538,6 @@ int Roboteq::run()
     mstimer = starttime;
     lstimer = starttime;
 
-    //  ros::Rate loop_rate(10);
 
     RCLCPP_INFO(this->get_logger(),"Beginning looping...");
 
@@ -596,20 +576,12 @@ int Roboteq::run()
             //odom_ls_run();
         }
 
-        // ros::spinOnce();
-        // rclcpp::spin_some(this) // maybe put this for node??
-        // rclcpp::spin(std::make_shared<MainNode>());
-        //    loop_rate.sleep();
-        //rclcpp::NodeOptions options;
-        //rclcpp::spin(std::make_shared<Roboteq::Roboteq>(options));
+
         
         
     }
 
-    if (controller.isOpen())
-        controller.close();
 
-    // RCLCPP_INFO(node->get_logger(),"Exiting");
 
     return 0;
 }
@@ -634,34 +606,12 @@ int main(int argc, char* argv[])
     auto node = std::make_shared<Roboteq::Roboteq>();
     exec.add_node(node);
     exec.spin();
-    printf("stop");
+    printf("closing ...");
     rclcpp::shutdown();
-    //signal(SIGINT, mySigintHandler); // rclcpp::shutdown();
+
     return 0;
 
     
-    // --- original ---
-    // Roboteq node;
 
-    // Override the default ros sigint handler.
-    // This must be set after the first NodeHandle is created.
-    // signal(SIGINT, mySigintHandler);
-
-    // return node.run();
 }
 
-/*
-int main(int argc, char* argv[])
-{
-  rclcpp::init(argc, argv);
-  //rclcpp::executors::SingleThreadedExecutor exec;
-  //rclcpp::NodeOptions options;
-  Roboteq node;
-  //auto node = std::make_shared<Roboteq::Roboteq>(options);
-  //exec.add_node(node);
-  //exec.spin();
-      
-  signal(SIGINT, mySigintHandler);
-  return node.run();
-}
-*/
