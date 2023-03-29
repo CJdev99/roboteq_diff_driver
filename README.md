@@ -18,7 +18,7 @@ Requires serial package. If not already installed:
 
 Get the code:
     
-    git clone https://github.com/wjwwood/serial.git
+    git clone -b ros2 https://github.com/wjwwood/serial.git
 
 Build:
 
@@ -39,8 +39,8 @@ It also expects that when it issues positive speed/power commands to the motor c
 
 ## TODO
 
-- [X] Finish initial development of motor commands and odometry stream in ROS2
-- [ ] Test with HDC2460
+- [X] initial ROS2 migration with odometry publishing and motor commands
+- [ ] add tf2, other sensor publishing
 - [ ] Make topic names and frames configuration parameters configurable at runtime.
 - [ ] Make robot configuration parameters configurable at runtime.
 - [ ] Make motor controller device configuration parameters configurable at runtime.
